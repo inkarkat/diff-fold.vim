@@ -22,6 +22,9 @@
 "   * Hasn't really been tested with much beyond above use cases
 "
 " Changelog:
+"   0.41 - (2011/06/03):
+"       * support diffs starting with "Index: " header
+"
 "   0.4 - (2011/05/24):
 "       * support for dynamic updating of folds via autocmd
 "
@@ -46,6 +49,11 @@
 "
 "-------------------------------------------------------------------------------
 
+function! s:FoldSmallerFoldlevel( foldLevel ) range
+    if foldlevel('.') < a:foldLevel
+        execute foldlevel('.') a:firstline . ',' . a:lastline . 'fold'
+    endif
+endfunction
 function! s:ProcessBuffer()
     " get number of lines
     let last_line=line('$')
@@ -56,16 +64,19 @@ function! s:ProcessBuffer()
         normal! zE
         
         " fold all hunks
-        silent! g/^@@/.,/\(\nchangeset\|^diff\|^--- .*\%( ----\)\@<!$\|^@@\)/-1 fold
+        silent! g/^@@/.,/\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\|^@@\)/-1 fold
         normal! G
         if search('^@@', 'b')
             exec ".," . last_line . "fold"
         endif
 
         " fold file diffs
-        silent! g/^diff\|^--- .*\%( ----\)\@<!$/.,/\(\nchangeset\|^diff\|^--- .*\%( ----\)\@<!$\)/-1 fold
+        silent! g/^Index: \|^diff/.,/\(\nchangeset\|^Index: \|^diff\)/-1 fold
+        silent! g/^--- .*\%( ----\)\@<!$/.,/\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\)/-1 call s:FoldSmallerFoldlevel(1)
         normal! G
-        if search('^diff\|^--- .*\%( ----\)\@<!$', 'b')
+        if search('^Index: \|^diff', 'b')
+            exec ".," . last_line . "fold"
+        elseif search('^--- .*\%( ----\)\@<!$', 'b')
             exec ".," . last_line . "fold"
         endif
 
