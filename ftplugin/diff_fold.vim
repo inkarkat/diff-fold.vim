@@ -22,6 +22,9 @@
 "   * Hasn't really been tested with much beyond above use cases
 "
 " Changelog:
+"   0.42 - (2011/09/03):
+"       * avoid polluting search history
+"
 "   0.41 - (2011/06/03):
 "       * support diffs starting with "Index: " header
 "
@@ -95,6 +98,7 @@ function! s:ProcessBuffer()
     endtry
 
     let b:diff_fold_update = b:changedtick
+    call histdel('search', -1)
     return 1
 endfunction
 if ! s:ProcessBuffer()
