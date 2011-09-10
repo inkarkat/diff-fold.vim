@@ -22,6 +22,10 @@
 "   * Hasn't really been tested with much beyond above use cases
 "
 " Changelog:
+"   0.43 - (2011/09/10):
+"       * only do processing when suitable foldmethod is set, and otherwise
+"         avoid error on 'zE'
+"
 "   0.42 - (2011/09/03):
 "       * avoid polluting search history
 "
@@ -58,13 +62,17 @@ function! s:FoldSmallerFoldlevel( foldLevel ) range
     endif
 endfunction
 function! s:ProcessBuffer()
+    if ! (&l:foldmethod ==# 'manual' || &l:foldmethod ==# 'marker')
+        return
+    endif
+
     " get number of lines
     let last_line=line('$')
     normal! gg
 
     try
         " delete all existing folds
-        normal! zE
+        silent! normal! zE
         
         " fold all hunks
         silent! g/^@@/.,/\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\|^@@\)/-1 fold
