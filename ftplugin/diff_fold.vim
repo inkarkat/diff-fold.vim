@@ -22,6 +22,10 @@
 "   * Hasn't really been tested with much beyond above use cases
 "
 " Changelog:
+"   0.44 - (2011/09/12):
+"       * filter away multiple "-r {GUID}" in foldtext, and do case-sensitive
+"         comparisons there
+"
 "   0.43 - (2011/09/10):
 "       * only do processing when suitable foldmethod is set, and otherwise
 "         avoid error on 'zE'
@@ -118,11 +122,11 @@ function! MyDiffFoldText()
     let foldtext = "+" . v:folddashes . " "
     let line = getline(v:foldstart)
 
-    if line =~ "^changeset.*"
+    if line =~# "^changeset.*"
         let foldtext .= substitute(line, "\:   ", " ", "")
-    elseif line =~ "^diff.*"
-        if (line =~ "diff -r")
-            let matches = matchlist(line, 'diff -r [a-z0-9]\+ \(.*\)$')
+    elseif line =~# "^diff.*"
+        if (line =~# "diff -r")
+            let matches = matchlist(line, 'diff \%(-r [a-z0-9]\+ \)\+\(.*\)$')
             let foldtext .= matches[1]
         else
             let matches = matchlist(line, 'a/\(.*\) b/')
