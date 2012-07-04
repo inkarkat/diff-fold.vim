@@ -148,8 +148,7 @@ function! s:UpdateDiffFolds()
     endif
 endfunction
 augroup diff_fold
-    autocmd! * <buffer>
-    autocmd BufEnter <buffer> call <SID>UpdateDiffFolds()
+    autocmd! BufEnter <buffer> call <SID>UpdateDiffFolds()
 augroup END
 
 let b:undo_ftplugin = (exists('b:undo_ftplugin') ? b:undo_ftplugin . '|' : '') . 'setlocal foldtext< | execute "autocmd! diff_fold * <buffer>"'
