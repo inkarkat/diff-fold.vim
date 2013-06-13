@@ -22,6 +22,10 @@
 "   * Hasn't really been tested with much beyond above use cases
 "
 " Changelog:
+"   0.45 - (2012/07/05):
+"       * rename global, generic MyDiffFoldText() function to
+"       diff_fold#FoldText().
+"
 "   0.44 - (2011/09/12):
 "       * filter away multiple "-r {GUID}" in foldtext, and do case-sensitive
 "         comparisons there
@@ -77,7 +81,7 @@ function! s:ProcessBuffer()
     try
         " delete all existing folds
         silent! normal! zE
-        
+
         " fold all hunks
         silent! g/^@@/.,/\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\|^@@\)/-1 fold
         normal! G
@@ -118,7 +122,7 @@ if ! s:ProcessBuffer()
 endif
 
 " make the foldtext more friendly
-function! MyDiffFoldText()
+function! diff_fold#FoldText()
     let foldtext = "+" . v:folddashes . " "
     let line = getline(v:foldstart)
 
@@ -140,7 +144,7 @@ function! MyDiffFoldText()
 
     return foldtext
 endfunction
-setlocal foldtext=MyDiffFoldText()
+setlocal foldtext=diff_fold#FoldText()
 
 function! s:UpdateDiffFolds()
     if ! exists('b:diff_fold_update') || b:changedtick != b:diff_fold_update
