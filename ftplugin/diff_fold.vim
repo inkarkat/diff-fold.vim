@@ -22,6 +22,9 @@
 "   * Hasn't really been tested with much beyond above use cases
 "
 " Changelog:
+"   0.46 - (2013/06/14):
+"       * Make matchlist() robust against 'ignorecase'.
+"
 "   0.45 - (2012/07/05):
 "       * rename global, generic MyDiffFoldText() function to
 "       diff_fold#FoldText().
@@ -130,10 +133,10 @@ function! diff_fold#FoldText()
         let foldtext .= substitute(line, "\:   ", " ", "")
     elseif line =~# "^diff.*"
         if (line =~# "diff -r")
-            let matches = matchlist(line, 'diff \%(-r [a-z0-9]\+ \)\+\(.*\)$')
+            let matches = matchlist(line, '\Cdiff \%(-r [a-z0-9]\+ \)\+\(.*\)$')
             let foldtext .= matches[1]
         else
-            let matches = matchlist(line, 'a/\(.*\) b/')
+            let matches = matchlist(line, '\Ca/\(.*\) b/')
             let foldtext .= matches[1]
         endif
     else
