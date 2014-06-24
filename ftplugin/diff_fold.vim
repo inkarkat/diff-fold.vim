@@ -22,6 +22,9 @@
 "   * Hasn't really been tested with much beyond above use cases
 "
 " Changelog:
+"   0.47 - (2014/05/30):
+"       * Maintain the original cursor position.
+"
 "   0.46 - (2013/06/14):
 "       * Make matchlist() robust against 'ignorecase'.
 "
@@ -79,6 +82,7 @@ function! s:ProcessBuffer()
 
     " get number of lines
     let last_line=line('$')
+    let l:save_cursor = getpos('.')[1:2]
     normal! gg
 
     try
@@ -113,11 +117,12 @@ function! s:ProcessBuffer()
     catch /E350/
         return 0
     finally
-        noh
+        nohlsearch
+        call cursor(l:save_cursor)
+        call histdel('search', -1)
     endtry
 
     let b:diff_fold_update = b:changedtick
-    call histdel('search', -1)
     return 1
 endfunction
 if ! s:ProcessBuffer()
