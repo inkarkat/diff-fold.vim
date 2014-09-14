@@ -8,6 +8,10 @@
 "
 " Installation: Place in your ~/.vim/ftplugin folder
 "
+" Dependencies:
+"   - ingo/strdisplaywidth.vim autoload script
+"   - ingo/window/dimensions.vim autoload script
+"
 " Usage:
 "   Pipe various Mercurial diff output to vim and see changesets, files, and
 "   hunks folded nicely together.
@@ -22,6 +26,10 @@
 "   * Hasn't really been tested with much beyond above use cases
 "
 " Changelog:
+"   0.48 - (2014/06/25):
+"       * Truncate the Index: filespec to the filename when it wouldn't fit the
+"         window width. Requires the ingo-library.
+"
 "   0.47 - (2014/05/30):
 "       * Maintain the original cursor position.
 "
@@ -143,6 +151,12 @@ function! diff_fold#FoldText()
         else
             let matches = matchlist(line, '\Ca/\(.*\) b/')
             let foldtext .= matches[1]
+        endif
+    elseif line =~# "^Index: .*"
+        if ingo#strdisplaywidth#HasMoreThan(line, ingo#window#dimensions#NetWindowWidth() - len(foldtext) - 1)
+            let foldtext .= 'Index: ' . fnamemodify(line[7:], ':t')
+        else
+            let foldtext .= line
         endif
     else
         let foldtext .= line
