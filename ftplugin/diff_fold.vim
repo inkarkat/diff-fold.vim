@@ -26,6 +26,13 @@
 "   * Hasn't really been tested with much beyond above use cases
 "
 " Changelog:
+"   0.49 - (2014/09/15):
+"       * BUG: Following Index: parts without hunks are folded together with the
+"         last hunk. Augment the regexp to match any border and explicitly check
+"         for a jump to a hunk beginning.
+"       * Turn off wrapping, turn on matching on current position (can happen
+"         because of G command) for search() tests.
+"
 "   0.48 - (2014/06/25):
 "       * Truncate the Index: filespec to the filename when it wouldn't fit the
 "         window width. Requires the ingo-library.
@@ -100,7 +107,7 @@ function! s:ProcessBuffer()
         " fold all hunks
         silent! g/^@@/.,/\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\|^@@\)/-1 fold
         normal! G
-        if search('^@@', 'b')
+        if search('\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\|^@@\)', 'bcW') && getline('.') =~# '^@@'
             exec ".," . last_line . "fold"
         endif
 
@@ -108,9 +115,9 @@ function! s:ProcessBuffer()
         silent! g/^Index: \|^diff/.,/\(\nchangeset\|^Index: \|^diff\)/-1 fold
         silent! g/^--- .*\%( ----\)\@<!$/.,/\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\)/-1 call s:FoldSmallerFoldlevel(1)
         normal! G
-        if search('^Index: \|^diff', 'b')
+        if search('^Index: \|^diff', 'bcW')
             exec ".," . last_line . "fold"
-        elseif search('^--- .*\%( ----\)\@<!$', 'b')
+        elseif search('^--- .*\%( ----\)\@<!$', 'bcW')
             exec ".," . last_line . "fold"
         endif
 
@@ -118,7 +125,7 @@ function! s:ProcessBuffer()
         if search('^changeset', '')
             silent! g/^changeset/.,/\nchangeset/-1 fold
             normal! G
-            if search('^changeset', 'b')
+            if search('^changeset', 'bcW')
                 exec ".," . last_line . "fold"
             endif
         endif
