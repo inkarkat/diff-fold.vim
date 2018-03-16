@@ -26,6 +26,10 @@
 "   * Hasn't really been tested with much beyond above use cases
 "
 " Changelog:
+"   0.50 - (2018/03/16):
+"       * ENH: Also support git diff format which has c/... i/... instead of
+"       a/... b/...
+"
 "   0.49 - (2014/09/15):
 "       * BUG: Following Index: parts without hunks are folded together with the
 "         last hunk. Augment the regexp to match any border and explicitly check
@@ -157,7 +161,12 @@ function! diff_fold#FoldText()
             let foldtext .= matches[1]
         else
             let matches = matchlist(line, '\Ca/\(.*\) b/')
-            let foldtext .= matches[1]
+            if empty(matches)
+                let matches = matchlist(line, '\Cc/\(.*\) i/')
+            endif
+            if ! empty(matches)
+                let foldtext .= matches[1]
+            endif
         endif
     elseif line =~# "^Index: .*"
         if ingo#strdisplaywidth#HasMoreThan(line, ingo#window#dimensions#NetWindowWidth() - len(foldtext) - 1)
