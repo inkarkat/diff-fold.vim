@@ -28,6 +28,9 @@
 " Changelog:
 "   0.51 - (2018/04/04):
 "       * ENH: Also support git diff format which has i/... w/...
+"       * BUG: Don't fold a single diff... (or changeset...) line. Introduce
+"         s:FoldMultipleLines() and :call that instead of a plain :fold (which
+"         will happily create a single-line fold if asked to).
 "
 "   0.50 - (2018/03/16):
 "       * ENH: Also support git diff format which has c/... i/... instead of
@@ -97,6 +100,11 @@ function! s:FoldSmallerFoldlevel( foldLevel ) range
         execute foldlevel('.') a:firstline . ',' . a:lastline . 'fold'
     endif
 endfunction
+function! s:FoldMultipleLines() range
+    if a:firstline != a:lastline
+        execute a:firstline . ',' . a:lastline . 'fold'
+    endif
+endfunction
 function! s:ProcessBuffer()
     if ! (&l:foldmethod ==# 'manual' || &l:foldmethod ==# 'marker')
         return
@@ -119,7 +127,7 @@ function! s:ProcessBuffer()
         endif
 
         " fold file diffs
-        silent! g/^Index: \|^diff/.,/\(\nchangeset\|^Index: \|^diff\)/-1 fold
+        silent! g/^Index: \|^diff/.,/\(\nchangeset\|^Index: \|^diff\)/-1 call s:FoldMultipleLines()
         silent! g/^--- .*\%( ----\)\@<!$/.,/\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\)/-1 call s:FoldSmallerFoldlevel(1)
         normal! G
         if search('^Index: \|^diff', 'bcW')
@@ -130,7 +138,7 @@ function! s:ProcessBuffer()
 
         " fold changesets (if any)
         if search('^changeset', '')
-            silent! g/^changeset/.,/\nchangeset/-1 fold
+            silent! g/^changeset/.,/\nchangeset/-1 call s:FoldMultipleLines()
             normal! G
             if search('^changeset', 'bcW')
                 exec ".," . last_line . "fold"
