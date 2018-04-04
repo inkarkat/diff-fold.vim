@@ -26,6 +26,9 @@
 "   * Hasn't really been tested with much beyond above use cases
 "
 " Changelog:
+"   0.51 - (2018/04/04):
+"       * ENH: Also support git diff format which has i/... w/...
+"
 "   0.50 - (2018/03/16):
 "       * ENH: Also support git diff format which has c/... i/... instead of
 "       a/... b/...
@@ -163,6 +166,9 @@ function! diff_fold#FoldText()
             let matches = matchlist(line, '\C\sa/\(.*\)\s\s\+/')
             if empty(matches)
                 let matches = matchlist(line, '\C\sc/\(.*\)\s\+i/')
+            endif
+            if empty(matches)
+                let matches = matchlist(line, '\C\si/\(.*\)\s\+w/')
             endif
             if ! empty(matches)
                 let foldtext .= matches[1]
