@@ -1,30 +1,13 @@
-This is a mirror of http://www.vim.org/scripts/script.php?script_id=3262
+This is a fork of [vimscript #3262](http://www.vim.org/scripts/script.php?script_id=3262), [original](https://bitbucket.org/thetoast/diff-fold) by Ryan Mechelke.
 
-Pipe various Mercurial diff output to vim and see changesets, files, and
-hunks folded nicely together.  In addition to providing folding of diff
-text, diff_fold also provides a navigation pane which you can use to more
-easily navigate large diffs.
+The original Mercurial-centric version has been extended to also support different version control systems equally well. Minor improvements have been made, and the script is used (and occasionally improved) by the new maintainer.
 
-Some examples:
+Open (or pipe) various (Git, Mercurial, Subversion...) diff outputs to vim and see changesets, files, and hunks folded nicely together.
+
+### Examples
+
     hg in --patch | vim -
-    hg diff | vim -
+    git diff | vim -
     hg diff -r 12 -r 13 | vim -
-    hg export -r 12: | vim -
+    hg export -r 12: > 12.patch; vim 12.patch
     hg log --patch src\somefile.cpp | vim -
-
-Navigation pane usage:
-       
-    The keybinding <Leader>nav will bring up the navigation pane.  You can
-    use the 'Enter' or 'v' keys to either go to, or view whole changsets
-    or files in the Diff View
-
-    If you don't like the default mapping, you can map a new one as
-    follows:
-        map {newmap} <Plug>DiffFoldNav
-
-Right now, this pretty much just works with Mercurial diff output.  Because Hg can use Git style patches, it does work with some Git output but it is not 100% reliable or useful.
-
-Eventually, I hope to make this work with more version control systems and just about anything that can produce unified diff output.
-
-This plugin has also been made into a pathogen bundle and can be installed with an 'hg clone https://bitbucket.org/thetoast/diff-fold' in your pathogen bundle folder.
-In the future, the pathogen bundle may be more up-to-date, but any major updates will be made available here.
