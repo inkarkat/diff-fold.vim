@@ -26,6 +26,9 @@
 "   * Hasn't really been tested with much beyond above use cases
 "
 " Changelog:
+"   0.52 - (2018/04/09):
+"       * Use :keepjumps / cursor() to avoid cluttering the jump list.
+"
 "   0.51 - (2018/04/04):
 "       * ENH: Also support git diff format which has i/... w/...
 "       * BUG: Don't fold a single diff... (or changeset...) line. Introduce
@@ -113,23 +116,23 @@ function! s:ProcessBuffer()
     " get number of lines
     let last_line=line('$')
     let l:save_cursor = getpos('.')[1:2]
-    normal! gg
+    call cursor(1, 1)
 
     try
         " delete all existing folds
         silent! normal! zE
 
         " fold all hunks
-        silent! g/^@@/.,/\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\|^@@\)/-1 fold
-        normal! G
+        silent! keepjumps global/^@@/.,/\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\|^@@\)/-1 fold
+        call cursor(line('$'), 1)
         if search('\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\|^@@\)', 'bcW') && getline('.') =~# '^@@'
             exec ".," . last_line . "fold"
         endif
 
         " fold file diffs
-        silent! g/^Index: \|^diff/.,/\(\nchangeset\|^Index: \|^diff\)/-1 call s:FoldMultipleLines()
-        silent! g/^--- .*\%( ----\)\@<!$/.,/\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\)/-1 call s:FoldSmallerFoldlevel(1)
-        normal! G
+        silent! keepjumps global/^Index: \|^diff/.,/\(\nchangeset\|^Index: \|^diff\)/-1 call s:FoldMultipleLines()
+        silent! keepjumps global/^--- .*\%( ----\)\@<!$/.,/\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\)/-1 call s:FoldSmallerFoldlevel(1)
+        call cursor(line('$'), 1)
         if search('^Index: \|^diff', 'bcW')
             exec ".," . last_line . "fold"
         elseif search('^--- .*\%( ----\)\@<!$', 'bcW')
@@ -138,8 +141,8 @@ function! s:ProcessBuffer()
 
         " fold changesets (if any)
         if search('^changeset', '')
-            silent! g/^changeset/.,/\nchangeset/-1 call s:FoldMultipleLines()
-            normal! G
+            silent! keepjumps global/^changeset/.,/\nchangeset/-1 call s:FoldMultipleLines()
+            call cursor(line('$'), 1)
             if search('^changeset', 'bcW')
                 exec ".," . last_line . "fold"
             endif
