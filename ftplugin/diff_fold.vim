@@ -28,6 +28,7 @@
 " Changelog:
 "   0.52 - (2018/04/09):
 "       * Use :keepjumps / cursor() to avoid cluttering the jump list.
+"       * Split off autoload script.
 "
 "   0.51 - (2018/04/04):
 "       * ENH: Also support git diff format which has i/... w/...
@@ -98,116 +99,15 @@
 "
 "-------------------------------------------------------------------------------
 
-function! s:FoldSmallerFoldlevel( foldLevel ) range
-    if foldlevel('.') < a:foldLevel
-        execute foldlevel('.') a:firstline . ',' . a:lastline . 'fold'
-    endif
-endfunction
-function! s:FoldMultipleLines() range
-    if a:firstline != a:lastline
-        execute a:firstline . ',' . a:lastline . 'fold'
-    endif
-endfunction
-function! s:ProcessBuffer()
-    if ! (&l:foldmethod ==# 'manual' || &l:foldmethod ==# 'marker')
-        return
-    endif
-
-    " get number of lines
-    let last_line=line('$')
-    let l:save_cursor = getpos('.')[1:2]
-    call cursor(1, 1)
-
-    try
-        " delete all existing folds
-        silent! normal! zE
-
-        " fold all hunks
-        silent! keepjumps global/^@@/.,/\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\|^@@\)/-1 fold
-        call cursor(line('$'), 1)
-        if search('\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\|^@@\)', 'bcW') && getline('.') =~# '^@@'
-            exec ".," . last_line . "fold"
-        endif
-
-        " fold file diffs
-        silent! keepjumps global/^Index: \|^diff/.,/\(\nchangeset\|^Index: \|^diff\)/-1 call s:FoldMultipleLines()
-        silent! keepjumps global/^--- .*\%( ----\)\@<!$/.,/\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\)/-1 call s:FoldSmallerFoldlevel(1)
-        call cursor(line('$'), 1)
-        if search('^Index: \|^diff', 'bcW')
-            exec ".," . last_line . "fold"
-        elseif search('^--- .*\%( ----\)\@<!$', 'bcW')
-            exec ".," . last_line . "fold"
-        endif
-
-        " fold changesets (if any)
-        if search('^changeset', '')
-            silent! keepjumps global/^changeset/.,/\nchangeset/-1 call s:FoldMultipleLines()
-            call cursor(line('$'), 1)
-            if search('^changeset', 'bcW')
-                exec ".," . last_line . "fold"
-            endif
-        endif
-    catch /E350/
-        return 0
-    finally
-        nohlsearch
-        call cursor(l:save_cursor)
-        call histdel('search', -1)
-    endtry
-
-    let b:diff_fold_update = b:changedtick
-    return 1
-endfunction
-if ! s:ProcessBuffer()
+if ! diff_fold#ProcessBuffer()
     finish
 endif
 
 " make the foldtext more friendly
-function! diff_fold#FoldText()
-    let foldtext = "+" . v:folddashes . " "
-    let line = getline(v:foldstart)
-
-    if line =~# "^changeset.*"
-        let foldtext .= substitute(line, "\:   ", " ", "")
-    elseif line =~# "^diff.*"
-        if (line =~# "diff -r")
-            let matches = matchlist(line, '\Cdiff \%(-r [a-z0-9]\+ \)\+\(.*\)$')
-            let foldtext .= matches[1]
-        else
-            let matches = matchlist(line, '\C\sa/\(.*\)\s\s\+/')
-            if empty(matches)
-                let matches = matchlist(line, '\C\sc/\(.*\)\s\+i/')
-            endif
-            if empty(matches)
-                let matches = matchlist(line, '\C\si/\(.*\)\s\+w/')
-            endif
-            if ! empty(matches)
-                let foldtext .= matches[1]
-            endif
-        endif
-    elseif line =~# "^Index: .*"
-        if ingo#strdisplaywidth#HasMoreThan(line, ingo#window#dimensions#NetWindowWidth() - len(foldtext) - 1)
-            let foldtext .= 'Index: ' . fnamemodify(line[7:], ':t')
-        else
-            let foldtext .= line
-        endif
-    else
-        let foldtext .= line
-    endif
-
-    let foldtext .= " (" . (v:foldend - v:foldstart) . " lines)\t"
-
-    return foldtext
-endfunction
 setlocal foldtext=diff_fold#FoldText()
 
-function! s:UpdateDiffFolds()
-    if ! exists('b:diff_fold_update') || b:changedtick != b:diff_fold_update
-        call s:ProcessBuffer()
-    endif
-endfunction
 augroup diff_fold
-    autocmd! BufEnter <buffer> call <SID>UpdateDiffFolds()
+    autocmd! BufEnter <buffer> call diff_fold#UpdateDiffFolds()
 augroup END
 
 let b:undo_ftplugin = (exists('b:undo_ftplugin') ? b:undo_ftplugin . '|' : '') . 'setlocal foldtext< | execute "autocmd! diff_fold * <buffer>"'
