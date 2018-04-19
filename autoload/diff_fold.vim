@@ -82,7 +82,7 @@ function! diff_fold#FoldText()
             let matches = matchlist(line, '\Cdiff \%(-r [a-z0-9]\+ \)\+\(.*\)$')
             let foldtext .= matches[1]
         else
-            let matches = matchlist(line, '\C\sa/\(.*\)\s\s\+/')
+            let matches = matchlist(line, '\C\sa/\(.*\)\s\+b/')
             if empty(matches)
                 let matches = matchlist(line, '\C\sc/\(.*\)\s\+i/')
             endif
