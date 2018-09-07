@@ -20,9 +20,17 @@ function! s:FoldMultipleLines() range
         execute a:firstline . ',' . a:lastline . 'fold'
     endif
 endfunction
-function! diff_fold#ProcessBuffer()
+function! diff_fold#ProcessBuffer( ... )
     if ! (&l:foldmethod ==# 'manual' || &l:foldmethod ==# 'marker')
         return
+    endif
+
+    if a:0
+        let l:changesetExpr = a:1
+    elseif exists('b:diff_fold_changesetExpr')
+        let l:changesetExpr = b:diff_fold_changesetExpr
+    else
+        let l:changesetExpr = '^# HG changeset patch'
     endif
 
     " get number of lines
@@ -35,15 +43,15 @@ function! diff_fold#ProcessBuffer()
         silent! normal! zE
 
         " fold all hunks
-        silent! keepjumps global/^@@/.,/\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\|^@@\)/-1 fold
+        silent! execute printf('keepjumps global/^@@/.,/\(%s\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\|^@@\)/-1 fold', l:changesetExpr)
         call cursor(line('$'), 1)
-        if search('\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\|^@@\)', 'bcW') && getline('.') =~# '^@@'
+        if search(printf('\(%s\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\|^@@\)', l:changesetExpr), 'bcW') && getline('.') =~# '^@@'
             exec ".," . last_line . "fold"
         endif
 
         " fold file diffs
-        silent! keepjumps global/^Index: \|^diff/.,/\(\nchangeset\|^Index: \|^diff\)/-1 call s:FoldMultipleLines()
-        silent! keepjumps global/^--- .*\%( ----\)\@<!$/.,/\(\nchangeset\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\)/-1 call s:FoldSmallerFoldlevel(1)
+        silent! execute printf('keepjumps global/^Index: \|^diff/.,/\(%s\|^Index: \|^diff\)/-1 call s:FoldMultipleLines()', l:changesetExpr)
+        silent! execute printf('keepjumps global/^--- .*\%( ----\)\@<!$/.,/\(%s\|^Index: \|^diff\|^--- .*\%( ----\)\@<!$\)/-1 call s:FoldSmallerFoldlevel(1)', l:changesetExpr)
         call cursor(line('$'), 1)
         if search('^Index: \|^diff', 'bcW')
             exec ".," . last_line . "fold"
@@ -52,10 +60,12 @@ function! diff_fold#ProcessBuffer()
         endif
 
         " fold changesets (if any)
-        if search('^changeset', '')
-            silent! keepjumps global/^changeset/.,/\nchangeset/-1 call s:FoldMultipleLines()
+        if search(l:changesetExpr, '')
+            let b:diff_fold_changesetExpr = l:changesetExpr
+
+            silent! execute printf('keepjumps global/%s/.,/%s/-1 call s:FoldMultipleLines()', l:changesetExpr, l:changesetExpr)
             call cursor(line('$'), 1)
-            if search('^changeset', 'bcW')
+            if search(l:changesetExpr, 'bcW')
                 exec ".," . last_line . "fold"
             endif
         endif
