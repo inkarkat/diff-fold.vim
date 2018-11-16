@@ -94,13 +94,13 @@ function! diff_fold#FoldText()
         else
             let matches = matchlist(line, '\C\sa/\(.*\)\s\+b/')
             if empty(matches)
-                let matches = matchlist(line, '\C\sc/\(.*\)\s\+i/')
+                let matches = matchlist(line, '\C\sc/\(.*\)\s\+i/\(.*\)')
             endif
             if empty(matches)
-                let matches = matchlist(line, '\C\si/\(.*\)\s\+w/')
+                let matches = matchlist(line, '\C\si/\(.*\)\s\+w/\(.*\)')
             endif
             if ! empty(matches)
-                let foldtext .= matches[1]
+                let foldtext .= (empty(matches[2]) ? matches[1] : matches[2] . (matches[1] ==# matches[2] ? '' : ' (moved)'))
             endif
         endif
     elseif line =~# "^Index: .*"
